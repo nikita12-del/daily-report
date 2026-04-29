@@ -36,8 +36,14 @@
 
     <button id="applyRange" style="margin-left:15px;">Apply</button>
   </div> 
-
-  <!-- Loading message -->
+  <!-- Name Filter -->
+<div class="filter-box">
+  <label for="nameFilter">Select Name:</label>
+  <select id="nameFilter">
+    <option value="">All Employees</option>
+  </select>
+</div>
+ <!-- Loading message -->
   <div id="loading">Loading data, please wait...</div>
 
   <!-- Table -->
@@ -65,6 +71,7 @@
         let parsed = Papa.parse(csvText, { header: false });
         parsedData = parsed.data;
         renderTable(parsedData); // initial load
+        populateNameFilter(parsedData); // fill dropdown with names
         document.getElementById("loading").style.display = "none"; // Loading हटाओ
       })
       .catch(err => {
@@ -94,32 +101,46 @@
         table.appendChild(tr);
       });
     }
-
-    // Parse dd/mm/yyyy format
+// Populate name filter 
+    function populateNameFilter(data) {
+  let nameSet = new Set();
+  data.forEach((row, idx) => {
+    if (idx === 0) return; // skip header
+    if (row[2]) nameSet.add(row[2]); // 3rd column = Name
+  });
+  let select = document.getElementById("nameFilter");
+  nameSet.forEach(name => {
+    let opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+}
+ // Parse dd/mm/yyyy format
     function parseDate(str) {
       if (!str) return null;
       let [day, month, year] = str.split("/");
       return new Date(year, month - 1, day);
     }
+// Apply filter (Date + Name)
+    function applyFilters() {
+  let start = parseDate(document.getElementById("startDate").value.trim());
+  let end = parseDate(document.getElementById("endDate").value.trim());
+  let selectedName = document.getElementById("nameFilter").value;
 
-    // Filter button
-    document.getElementById("applyRange").addEventListener("click", () => {
-      let start = parseDate(document.getElementById("startDate").value.trim());
-      let end = parseDate(document.getElementById("endDate").value.trim());
+  let filtered = parsedData.filter((row, idx) => {
+    if (idx === 0) return false;
+    let rowDate = parseDate(row[0]);
+    let dateMatch = (!start || !end) || (rowDate && rowDate >= start && rowDate <= end);
+    let nameMatch = !selectedName || row[2] === selectedName;
+    return dateMatch && nameMatch;
+  });
 
-      if (!start || !end) {
-        alert("कृपया दोनों तारीखें dd/mm/yyyy फॉर्मेट में डालें (जैसे 01/12/2025)");
-        return;
-      }
-
-      let filtered = parsedData.filter((row, idx) => {
-        if (idx === 0) return false; // skip header
-        let rowDate = parseDate(row[0]); // first column = Date
-        return rowDate && rowDate >= start && rowDate <= end;
-      });
-
-      renderTable(filtered);
-    });
-  </script>
+  renderTable(filtered);
+}
+//Event listeners
+document.getElementById("applyRange").addEventListener("click", applyFilters);
+document.getElementById("nameFilter").addEventListener("change", applyFilters);
+ </script>
 </body>
 </html>
