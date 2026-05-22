@@ -94,26 +94,30 @@
 
     // Render table
     function renderTable(data) {
-      let table = document.getElementById("employeeTable");
-      table.innerHTML = `
-        <tr>
-          <th>Date</th><th>Line</th><th>Name</th>
-          <th>Activity</th><th>Location</th><th>Status</th>
-        </tr>
-      `;
-      data.forEach((row, idx) => {
-        if (idx === 0) return; 
-        if (!row || row.length === 0 || (row.length === 1 && row[0] === "")) return;
-        let tr = document.createElement("tr");
-        row.forEach(col => {
-          let td = document.createElement("td");
-          td.textContent = col;
-          tr.appendChild(td);
-        });
-        table.appendChild(tr);
-      });
-    }
+  let table = document.getElementById("employeeTable");
+  table.innerHTML = "";
 
+  // 🔥 Dynamic header row from CSV
+  let headerRow = document.createElement("tr");
+  data[0].forEach(col => {
+    let th = document.createElement("th");
+    th.textContent = col;
+    headerRow.appendChild(th);
+  });
+  table.appendChild(headerRow);
+    // बाकी rows
+      data.forEach((row, idx) => {
+    if (idx === 0) return; // skip header
+    if (!row || row.length === 0 || (row.length === 1 && row[0] === "")) return;
+    let tr = document.createElement("tr");
+    row.forEach(col => {
+      let td = document.createElement("td");
+      td.textContent = col;
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+}
     // Populate name filter 
     function populateNameFilter(data) {
       let nameSet = new Set();
