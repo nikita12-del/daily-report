@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Daily Report</title>
+  <title>Dynamic Report</title>
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; }
     h2 {
@@ -24,7 +24,8 @@
   </style>
 </head>
 <body>
-  <h2>Daily Report</h2>
+  <!-- Dynamic Heading -->
+  <h2 id="reportHeading">Daily Report</h2>
 
   <!-- Date Range Filter -->
   <div class="filter-box">
@@ -36,14 +37,26 @@
 
     <button id="applyRange" style="margin-left:15px;">Apply</button>
   </div> 
+
   <!-- Name Filter -->
-<div class="filter-box">
-  <label for="nameFilter">Select Name:</label>
-  <select id="nameFilter">
-    <option value="">All Employees</option>
-  </select>
-</div>
- <!-- Loading message -->
+  <div class="filter-box">
+    <label for="nameFilter">Select Name:</label>
+    <select id="nameFilter">
+      <option value="">All Employees</option>
+    </select>
+  </div>
+
+  <!-- Heading Filter -->
+  <div class="filter-box">
+    <label for="headingFilter">Select Heading:</label>
+    <select id="headingFilter">
+      <option value="Daily Report">Daily Report</option>
+      <option value="Attendance Report">Attendance Report</option>
+      <option value="Activity Report">Activity Report</option>
+    </select>
+  </div>
+
+  <!-- Loading message -->
   <div id="loading">Loading data, please wait...</div>
 
   <!-- Table -->
@@ -72,7 +85,7 @@
         parsedData = parsed.data;
         renderTable(parsedData); // initial load
         populateNameFilter(parsedData); // fill dropdown with names
-        document.getElementById("loading").style.display = "none"; // Loading हटाओ
+        document.getElementById("loading").style.display = "none"; 
       })
       .catch(err => {
         console.error("Fetch error:", err);
@@ -82,7 +95,6 @@
     // Render table
     function renderTable(data) {
       let table = document.getElementById("employeeTable");
-      // keep header row only
       table.innerHTML = `
         <tr>
           <th>Date</th><th>Line</th><th>Name</th>
@@ -90,7 +102,7 @@
         </tr>
       `;
       data.forEach((row, idx) => {
-        if (idx === 0) return; // skip CSV header
+        if (idx === 0) return; 
         if (!row || row.length === 0 || (row.length === 1 && row[0] === "")) return;
         let tr = document.createElement("tr");
         row.forEach(col => {
@@ -101,46 +113,61 @@
         table.appendChild(tr);
       });
     }
-// Populate name filter 
+
+    // Populate name filter 
     function populateNameFilter(data) {
-  let nameSet = new Set();
-  data.forEach((row, idx) => {
-    if (idx === 0) return; // skip header
-    if (row[2]) nameSet.add(row[2]); // 3rd column = Name
-  });
-  let select = document.getElementById("nameFilter");
-  nameSet.forEach(name => {
-    let opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    select.appendChild(opt);
-  });
-}
- // Parse dd/mm/yyyy format
+      let nameSet = new Set();
+      data.forEach((row, idx) => {
+        if (idx === 0) return; 
+        if (row[2]) nameSet.add(row[2]); 
+      });
+      let select = document.getElementById("nameFilter");
+      nameSet.forEach(name => {
+        let opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+    }
+
+    // Parse dd/mm/yyyy format
     function parseDate(str) {
       if (!str) return null;
       let [day, month, year] = str.split("/");
       return new Date(year, month - 1, day);
     }
-// Apply filter (Date + Name)
+
+    // Apply filter (Date + Name + Heading)
     function applyFilters() {
-  let start = parseDate(document.getElementById("startDate").value.trim());
-  let end = parseDate(document.getElementById("endDate").value.trim());
-  let selectedName = document.getElementById("nameFilter").value;
+      let start = parseDate(document.getElementById("startDate").value.trim());
+      let end = parseDate(document.getElementById("endDate").value.trim());
+      let selectedName = document.getElementById("nameFilter").value;
+      let selectedHeading = document.getElementById("headingFilter").value;
 
-  let filtered = parsedData.filter((row, idx) => {
-    if (idx === 0) return false;
-    let rowDate = parseDate(row[0]);
-    let dateMatch = (!start || !end) || (rowDate && rowDate >= start && rowDate <= end);
-    let nameMatch = !selectedName || row[2] === selectedName;
-    return dateMatch && nameMatch;
-  });
+      let filtered = parsedData.filter((row, idx) => {
+        if (idx === 0) return false;
+        let rowDate = parseDate(row[0]);
+        let dateMatch = (!start || !end) || (rowDate && rowDate >= start && rowDate <= end);
+        let nameMatch = !selectedName || row[2] === selectedName;
+        return dateMatch && nameMatch;
+      });
 
-  renderTable(filtered);
-}
-//Event listeners
-document.getElementById("applyRange").addEventListener("click", applyFilters);
-document.getElementById("nameFilter").addEventListener("change", applyFilters);
- </script>
+      renderTable(filtered);
+
+      // 🔥 Dynamic Heading Update
+      let heading = selectedHeading;
+      if (selectedName) heading += " – " + selectedName;
+      if (start && end) {
+        heading += " (" + document.getElementById("startDate").value + 
+                   " – " + document.getElementById("endDate").value + ")";
+      }
+      document.getElementById("reportHeading").textContent = heading;
+    }
+
+    // Event listeners
+    document.getElementById("applyRange").addEventListener("click", applyFilters);
+    document.getElementById("nameFilter").addEventListener("change", applyFilters);
+    document.getElementById("headingFilter").addEventListener("change", applyFilters);
+  </script>
 </body>
 </html>
