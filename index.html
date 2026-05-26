@@ -6,34 +6,34 @@
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; }
    /* Correct CSS for heading */
-    #reportHeading {
-      text-align: center;
-      font-size: 34px;
-      font-weight: bold;
-      color: #fff;
-      padding: 40px 20px;
-      margin-bottom: 30px;
-      border-radius: 20px;
-      letter-spacing: 2px;
+#reportHeading {
+  text-align: center;
+  font-size: 34px;
+  font-weight: bold;
+  color: #fff;
+  padding: 40px 20px;
+  margin-bottom: 30px;
+  border-radius: 20px;
+  letter-spacing: 2px;
 
-      /* Metro image background with blur overlay */
-      background: url("images/metro.png") no-repeat center center;
-      background-size: cover;
-      position: relative;
+  /* Metro image + gradient overlay */
+  background: 
+    linear-gradient(90deg, #00c6ff, #0072ff), 
+    url("images/metro.png") no-repeat center center;
+  background-size: cover;
 
-      /* Glass effect */
-      backdrop-filter: blur(6px);
-      background-color: rgba(0, 0, 0, 0.4);
+  /* Glass effect */
+  backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.4);
 
-      /* Gradient border */
-      border: 3px solid;
-      border-image: linear-gradient(90deg, #ff6a00, #ee0979) 1;
+  /* Gradient border */
+  border: 3px solid;
+  border-image: linear-gradient(90deg, #00c6ff, #0072ff) 1;
 
-      /* Effects */
-      box-shadow: 0 12px 24px rgba(0,0,0,0.6);
-      text-shadow: 2px 2px 10px rgba(0,0,0,0.9);
-    }
-
+  /* Effects */
+  box-shadow: 0 12px 24px rgba(0,0,0,0.6);
+  text-shadow: 2px 2px 10px rgba(0,0,0,0.9);
+}
     table { margin:auto; border-collapse:collapse; width:95%; }
     th, td { border:1px solid #ccc; padding:8px; text-align:center; }
     th { background:#f0f0f0; }
