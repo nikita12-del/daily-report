@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dynamic Report</title>
+  <title>Daily Report Dashboard</title>
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; }
     h2 {
@@ -16,59 +16,59 @@
       letter-spacing:1px;
       box-shadow:0 4px 6px rgba(0,0,0,0.2);
     }
-    table { margin:auto; border-collapse:collapse; width:90%; }
+    table { margin:auto; border-collapse:collapse; width:95%; }
     th, td { border:1px solid #ccc; padding:8px; text-align:center; }
     th { background:#f0f0f0; }
-    .filter-box { text-align:center; margin:20px 0; }
+    select.filter-select {
+      width: 95%;
+      margin-top: 4px;
+      font-size: 12px;
+    }
     #loading { text-align:center; font-weight:bold; margin:10px; }
+    /* Status badges */
+    .status-present {
+      background-color: #2ecc71;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .status-absent {
+      background-color: #e74c3c;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .status-holiday {
+      background-color: #3498db;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <!-- Dynamic Heading -->
+  <!-- Fixed Heading -->
   <h2 id="reportHeading">Daily Report</h2>
-
-  <!-- Date Range Filter -->
-  <div class="filter-box">
-    <label for="startDate">Start Date:</label>
-    <input type="text" id="startDate" placeholder="dd/mm/yyyy">
-
-    <label for="endDate" style="margin-left:15px;">End Date:</label>
-    <input type="text" id="endDate" placeholder="dd/mm/yyyy">
-
-    <button id="applyRange" style="margin-left:15px;">Apply</button>
-  </div> 
-
-  <!-- Name Filter -->
-  <div class="filter-box">
-    <label for="nameFilter">Select Name:</label>
-    <select id="nameFilter">
-      <option value="">All Employees</option>
-    </select>
-  </div>
-
-  <!-- Heading Filter -->
-  <div class="filter-box">
-    <label for="headingFilter">Select Heading:</label>
-    <select id="headingFilter">
-      <option value="Daily Report">Daily Report</option>
-      <option value="Attendance Report">Attendance Report</option>
-      <option value="Activity Report">Activity Report</option>
-    </select>
-  </div>
 
   <!-- Loading message -->
   <div id="loading">Loading data, please wait...</div>
 
   <!-- Table -->
   <table id="employeeTable">
-    <tr>
-      <th>Date</th>
-      <th>Line</th>
-      <th>Name</th>
-      <th>Activity</th>
-      <th>Location</th>
-      <th>Status</th>
-    </tr>
+    <thead>
+      <tr>
+        <th>Date<br><select class="filter-select" data-col="0"><option value="">All</option></select></th>
+        <th>Line<br><select class="filter-select" data-col="1"><option value="">All</option></select></th>
+        <th>Name<br><select class="filter-select" data-col="2"><option value="">All</option></select></th>
+        <th>Activity<br><select class="filter-select" data-col="3"><option value="">All</option></select></th>
+        <th>Location<br><select class="filter-select" data-col="4"><option value="">All</option></select></th>
+        <th>Status<br><select class="filter-select" data-col="5"><option value="">All</option></select></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
   </table>
 
   <!-- PapaParse library -->
@@ -83,8 +83,8 @@
       .then(csvText => {
         let parsed = Papa.parse(csvText, { header: false });
         parsedData = parsed.data;
-        renderTable(parsedData); // initial load
-        populateNameFilter(parsedData); // fill dropdown with names
+        renderTable(parsedData); 
+        populateFilters(parsedData);
         document.getElementById("loading").style.display = "none"; 
       })
       .catch(err => {
@@ -93,82 +93,97 @@
       });
 
     // Render table
-      function renderTable(data) {
-      let table = document.getElementById("employeeTable");
-      // keep header row only
-      table.innerHTML = `
-        <tr>
-          <th>Date</th><th>Line</th><th>Name</th>
-          <th>Activity</th><th>Location</th><th>Status</th>
-        </tr>
-      `;
-      data.forEach((row, idx) => {
-        if (idx === 0) return; // skip CSV header
-        if (!row || row.length === 0 || (row.length === 1 && row[0] === "")) return;
-        let tr = document.createElement("tr");
-        row.forEach(col => {
-          let td = document.createElement("td");
-          td.textContent = col;
-          tr.appendChild(td);
-        });
-        table.appendChild(tr);
-      });
-    }
-
-    // Populate name filter 
-    function populateNameFilter(data) {
-      let nameSet = new Set();
+    function renderTable(data) {
+      let tbody = document.querySelector("#employeeTable tbody");
+      tbody.innerHTML = "";
       data.forEach((row, idx) => {
         if (idx === 0) return; 
-        if (row[2]) nameSet.add(row[2]); 
-      });
-      let select = document.getElementById("nameFilter");
-      nameSet.forEach(name => {
-        let opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
+        if (!row || row.length === 0 || (row.length === 1 && row[0] === "")) return;
+        let tr = document.createElement("tr");
+        row.forEach((col, i) => {
+          let td = document.createElement("td");
+          if (i === 5) { // Status column
+            if (col === "P") {
+              td.innerHTML = `<span class="status-present">Present</span>`;
+            } else if (col === "A") {
+              td.innerHTML = `<span class="status-absent">Absent</span>`;
+            } else if (col === "H") {
+              td.innerHTML = `<span class="status-holiday">Holiday</span>`;
+            } else {
+              td.textContent = col;
+            }
+          } else {
+            td.textContent = col;
+          }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
       });
     }
 
-    // Parse dd/mm/yyyy format
-    function parseDate(str) {
-      if (!str) return null;
-      let [day, month, year] = str.split("/");
-      return new Date(year, month - 1, day);
+    // Populate dropdown filters
+    function populateFilters(data) {
+      let selects = document.querySelectorAll(".filter-select");
+      selects.forEach(sel => {
+        let colIndex = sel.dataset.col;
+        let values = new Set();
+        data.forEach((row, idx) => {
+          if (idx === 0) return;
+          if (row[colIndex]) values.add(row[colIndex]);
+        });
+        values.forEach(v => {
+          let opt = document.createElement("option");
+          opt.value = v;
+          opt.textContent = v;
+          sel.appendChild(opt);
+        });
+      });
     }
 
-    // Apply filter (Date + Name + Heading)
+    // Apply filters
     function applyFilters() {
-      let start = parseDate(document.getElementById("startDate").value.trim());
-      let end = parseDate(document.getElementById("endDate").value.trim());
-      let selectedName = document.getElementById("nameFilter").value;
-      let selectedHeading = document.getElementById("headingFilter").value;
+      let selects = document.querySelectorAll(".filter-select");
+      let tbody = document.querySelector("#employeeTable tbody");
+      tbody.innerHTML = "";
 
-      let filtered = parsedData.filter((row, idx) => {
-        if (idx === 0) return false;
-        let rowDate = parseDate(row[0]);
-        let dateMatch = (!start || !end) || (rowDate && rowDate >= start && rowDate <= end);
-        let nameMatch = !selectedName || row[2] === selectedName;
-        return dateMatch && nameMatch;
+      parsedData.forEach((row, idx) => {
+        if (idx === 0) return;
+        let show = true;
+        selects.forEach(sel => {
+          let colIndex = sel.dataset.col;
+          let val = sel.value;
+          if (val && row[colIndex] !== val) {
+            show = false;
+          }
+        });
+        if (show) {
+          let tr = document.createElement("tr");
+          row.forEach((col, i) => {
+            let td = document.createElement("td");
+            if (i === 5) { // Status column
+              if (col === "P") {
+                td.innerHTML = `<span class="status-present">Present</span>`;
+              } else if (col === "A") {
+                td.innerHTML = `<span class="status-absent">Absent</span>`;
+              } else if (col === "H") {
+                td.innerHTML = `<span class="status-holiday">Holiday</span>`;
+              } else {
+                td.textContent = col;
+              }
+            } else {
+              td.textContent = col;
+            }
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        }
       });
-
-      renderTable(filtered);
-
-      // 🔥 Dynamic Heading Update
-      let heading = selectedHeading;
-      if (selectedName) heading += " – " + selectedName;
-      if (start && end) {
-        heading += " (" + document.getElementById("startDate").value + 
-                   " – " + document.getElementById("endDate").value + ")";
-      }
-      document.getElementById("reportHeading").textContent = heading;
     }
 
     // Event listeners
-    document.getElementById("applyRange").addEventListener("click", applyFilters);
-    document.getElementById("nameFilter").addEventListener("change", applyFilters);
-    document.getElementById("headingFilter").addEventListener("change", applyFilters);
+    document.querySelectorAll(".filter-select").forEach(sel => {
+      sel.addEventListener("change", applyFilters);
+    });
   </script>
 </body>
 </html>
