@@ -192,11 +192,14 @@ document.getElementById("toDate")
     }
 
     // Apply filters
- function applyFilters() {
+function applyFilters() {
 
   let selects = document.querySelectorAll(".filter-select");
-  let tbody = document.querySelector("#employeeTable tbody");
+  let selectedMonth = document.getElementById("monthFilter").value;
+  let fromDate = document.getElementById("fromDate").value;
+  let toDate = document.getElementById("toDate").value;
 
+  let tbody = document.querySelector("#employeeTable tbody");
   tbody.innerHTML = "";
 
   parsedData.forEach((row, idx) => {
@@ -213,6 +216,43 @@ document.getElementById("toDate")
         show = false;
       }
     });
+
+    let parts = row[0].split("/");
+
+    if (parts.length === 3) {
+
+      let rowDate = new Date(
+        parts[2],
+        parts[1] - 1,
+        parts[0]
+      );
+
+      if (selectedMonth) {
+        let monthName = rowDate.toLocaleString("default", {
+          month: "long"
+        });
+
+        if (monthName !== selectedMonth) {
+          show = false;
+        }
+      }
+
+      if (fromDate) {
+        let from = new Date(fromDate);
+
+        if (rowDate < from) {
+          show = false;
+        }
+      }
+
+      if (toDate) {
+        let to = new Date(toDate);
+
+        if (rowDate > to) {
+          show = false;
+        }
+      }
+    }
 
     if (show) {
 
@@ -242,20 +282,24 @@ document.getElementById("toDate")
         }
 
         tr.appendChild(td);
-
       });
 
       tbody.appendChild(tr);
-
     }
 
   });
-
 }
-    // Event listeners
-    document.querySelectorAll(".filter-select").forEach(sel => {
-      sel.addEventListener("change", applyFilters);
-    });
-  </script>
+// Event listeners
+document.querySelectorAll(".filter-select").forEach(sel => {
+  sel.addEventListener("change", applyFilters);
+});
+
+document.getElementById("monthFilter").addEventListener("change", applyFilters);
+
+document.getElementById("fromDate").addEventListener("change", applyFilters);
+
+document.getElementById("toDate").addEventListener("change", applyFilters);
+
+</script>
 </body>
-</html>
+</html>   
