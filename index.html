@@ -66,6 +66,37 @@
 </h2>
   <!-- Loading message -->
   <div id="loading">Loading data, please wait...</div>
+  <!-- Month and Date Filter -->
+<div style="text-align:center; margin:20px;">
+
+<label><b>Month:</b></label>
+<select id="monthFilter">
+  <option value="">All Months</option>
+  <option value="January">January</option>
+  <option value="February">February</option>
+  <option value="March">March</option>
+  <option value="April">April</option>
+  <option value="May">May</option>
+  <option value="June">June</option>
+  <option value="July">July</option>
+  <option value="August">August</option>
+  <option value="September">September</option>
+  <option value="October">October</option>
+  <option value="November">November</option>
+  <option value="December">December</option>
+</select>
+
+&nbsp;&nbsp;
+
+<label><b>From Date:</b></label>
+<input type="date" id="fromDate">
+
+&nbsp;&nbsp;
+
+<label><b>To Date:</b></label>
+<input type="date" id="toDate">
+
+</div>
   <!-- Table -->
   <table id="employeeTable">
     <thead>
@@ -86,7 +117,9 @@
 
   <script>
     let parsedData = [];
-
+    function convertToDate(dateStr) {
+  return new Date(dateStr);
+}
     // Fetch CSV from Google Sheets
     fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRpc4H0TN40P_UMrs-0DUaxXx4joitx5dylz5aB6V1fRSCBDySQbgBuyztbllxkfFNfMwkE6dXkkN34/pub?output=csv")
       .then(res => res.text())
@@ -95,6 +128,14 @@
         parsedData = parsed.data;
         renderTable(parsedData); 
         populateFilters(parsedData);
+        document.getElementById("monthFilter")
+.addEventListener("change", applyFilters);
+
+document.getElementById("fromDate")
+.addEventListener("change", applyFilters);
+
+document.getElementById("toDate")
+.addEventListener("change", applyFilters);
         document.getElementById("loading").style.display = "none"; 
       })
       .catch(err => {
@@ -151,45 +192,66 @@
     }
 
     // Apply filters
-    function applyFilters() {
-      let selects = document.querySelectorAll(".filter-select");
-      let tbody = document.querySelector("#employeeTable tbody");
-      tbody.innerHTML = "";
+ function applyFilters() {
 
-      parsedData.forEach((row, idx) => {
-        if (idx === 0) return;
-        let show = true;
-        selects.forEach(sel => {
-          let colIndex = sel.dataset.col;
-          let val = sel.value;
-          if (val && row[colIndex] !== val) {
-            show = false;
+  let selects = document.querySelectorAll(".filter-select");
+  let tbody = document.querySelector("#employeeTable tbody");
+
+  tbody.innerHTML = "";
+
+  parsedData.forEach((row, idx) => {
+
+    if (idx === 0) return;
+
+    let show = true;
+
+    selects.forEach(sel => {
+      let colIndex = sel.dataset.col;
+      let val = sel.value;
+
+      if (val && row[colIndex] !== val) {
+        show = false;
+      }
+    });
+
+    if (show) {
+
+      let tr = document.createElement("tr");
+
+      row.forEach((col, i) => {
+
+        let td = document.createElement("td");
+
+        if (i === 5) {
+
+          if (col === "P") {
+            td.innerHTML = '<span class="status-present">Present</span>';
           }
-        });
-        if (show) {
-          let tr = document.createElement("tr");
-          row.forEach((col, i) => {
-            let td = document.createElement("td");
-            if (i === 5) { // Status column
-              if (col === "P") {
-                td.innerHTML = `<span class="status-present">Present</span>`;
-              } else if (col === "A") {
-                td.innerHTML = `<span class="status-absent">Absent</span>`;
-              } else if (col === "H") {
-                td.innerHTML = `<span class="status-holiday">Holiday</span>`;
-              } else {
-                td.textContent = col;
-              }
-            } else {
-              td.textContent = col;
-            }
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
+          else if (col === "A") {
+            td.innerHTML = '<span class="status-absent">Absent</span>';
+          }
+          else if (col === "H") {
+            td.innerHTML = '<span class="status-holiday">Holiday</span>';
+          }
+          else {
+            td.textContent = col;
+          }
+
+        } else {
+          td.textContent = col;
         }
+
+        tr.appendChild(td);
+
       });
+
+      tbody.appendChild(tr);
+
     }
 
+  });
+
+}
     // Event listeners
     document.querySelectorAll(".filter-select").forEach(sel => {
       sel.addEventListener("change", applyFilters);
