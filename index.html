@@ -6,6 +6,14 @@
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; }
    /* Correct CSS for heading */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Report Dashboard</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; }
+   /* Correct CSS for heading */
 #reportHeading {
   text-align: center;
   font-size: 34px;
@@ -23,6 +31,286 @@
   box-shadow: 0 12px 24px rgba(0,0,0,0.6);
   text-shadow: 2px 2px 10px rgba(0,0,0,0.9);
 }
+
+    table { margin:auto; border-collapse:collapse; width:95%; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+    th { background:#f0f0f0; }
+    select.filter-select {
+      width: 95%;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+    #loading { text-align:center; font-weight:bold; margin:10px; }
+
+    /* Status badges */
+    .status-present {
+      background-color: #2ecc71;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .status-absent {
+      background-color: #e74c3c;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .status-holiday {
+      background-color: #3498db;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Fixed Heading -->
+  <h2 id="reportHeading">
+  <img src="images/metro-logo.png" alt="Metro Logo" style="height:60px; vertical-align:middle; margin-right:12px;">
+  General Consultant – Track Work Report
+</h2>
+  <!-- Loading message -->
+  <div id="loading">Loading data, please wait...</div>
+  <!-- Month and Date Filter -->
+<div style="text-align:center; margin:20px;">
+
+<label><b>Month:</b></label>
+<select id="monthFilter">
+  <option value="">All Months</option>
+  <option value="January">January</option>
+  <option value="February">February</option>
+  <option value="March">March</option>
+  <option value="April">April</option>
+  <option value="May">May</option>
+  <option value="June">June</option>
+  <option value="July">July</option>
+  <option value="August">August</option>
+  <option value="September">September</option>
+  <option value="October">October</option>
+  <option value="November">November</option>
+  <option value="December">December</option>
+</select>
+
+&nbsp;&nbsp;
+
+<label><b>From Date:</b></label>
+<input type="date" id="fromDate">
+
+&nbsp;&nbsp;
+
+<label><b>To Date:</b></label>
+<input type="date" id="toDate">
+
+</div>
+  <!-- Table -->
+  <table id="employeeTable">
+    <thead>
+      <tr>
+        <th>Date<br><select class="filter-select" data-col="0"><option value="">All</option></select></th>
+        <th>Line<br><select class="filter-select" data-col="1"><option value="">All</option></select></th>
+        <th>Name<br><select class="filter-select" data-col="2"><option value="">All</option></select></th>
+        <th>Activity<br><select class="filter-select" data-col="3"><option value="">All</option></select></th>
+        <th>Location<br><select class="filter-select" data-col="4"><option value="">All</option></select></th>
+        <th>Status<br><select class="filter-select" data-col="5"><option value="">All</option></select></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- PapaParse library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+  <script>
+    let parsedData = [];
+    function convertToDate(dateStr) {
+  return new Date(dateStr);
+}
+    // Fetch CSV from Google Sheets
+    fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRpc4H0TN40P_UMrs-0DUaxXx4joitx5dylz5aB6V1fRSCBDySQbgBuyztbllxkfFNfMwkE6dXkkN34/pub?output=csv")
+      .then(res => res.text())
+      .then(csvText => {
+        let parsed = Papa.parse(csvText, { header: false });
+        parsedData = parsed.data;
+        renderTable(parsedData); 
+        populateFilters(parsedData);
+        document.getElementById("monthFilter")
+.addEventListener("change", applyFilters);
+
+document.getElementById("fromDate")
+.addEventListener("change", applyFilters);
+
+document.getElementById("toDate")
+.addEventListener("change", applyFilters);
+        document.getElementById("loading").style.display = "none"; 
+      })
+      .catch(err => {
+        console.error("Fetch error:", err);
+        document.getElementById("loading").textContent = "डेटा लोड करने में समस्या हुई।";
+      });
+
+    // Render table
+    function renderTable(data) {
+      let tbody = document.querySelector("#employeeTable tbody");
+      tbody.innerHTML = "";
+      data.forEach((row, idx) => {
+        if (idx === 0) return; 
+        if (!row || row.length === 0 || (row.length === 1 && row[0] === "")) return;
+        let tr = document.createElement("tr");
+        row.forEach((col, i) => {
+          let td = document.createElement("td");
+          if (i === 5) { // Status column
+            if (col === "P") {
+              td.innerHTML = `<span class="status-present">Present</span>`;
+            } else if (col === "A") {
+              td.innerHTML = `<span class="status-absent">Absent</span>`;
+            } else if (col === "H") {
+              td.innerHTML = `<span class="status-holiday">Holiday</span>`;
+            } else {
+              td.textContent = col;
+            }
+          } else {
+            td.textContent = col;
+          }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Populate dropdown filters
+    function populateFilters(data) {
+      let selects = document.querySelectorAll(".filter-select");
+      selects.forEach(sel => {
+        let colIndex = sel.dataset.col;
+        let values = new Set();
+        data.forEach((row, idx) => {
+          if (idx === 0) return;
+          if (row[colIndex]) values.add(row[colIndex]);
+        });
+        values.forEach(v => {
+          let opt = document.createElement("option");
+          opt.value = v;
+          opt.textContent = v;
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    // Apply filters
+function applyFilters() {
+
+  let selects = document.querySelectorAll(".filter-select");
+  let selectedMonth = document.getElementById("monthFilter").value;
+  let fromDate = document.getElementById("fromDate").value;
+  let toDate = document.getElementById("toDate").value;
+
+  let tbody = document.querySelector("#employeeTable tbody");
+  tbody.innerHTML = "";
+
+  parsedData.forEach((row, idx) => {
+
+    if (idx === 0) return;
+
+    let show = true;
+
+    selects.forEach(sel => {
+      let colIndex = sel.dataset.col;
+      let val = sel.value;
+
+      if (val && row[colIndex] !== val) {
+        show = false;
+      }
+    });
+
+    let parts = row[0].split("/");
+
+    if (parts.length === 3) {
+
+      let rowDate = new Date(
+        parts[2],
+        parts[1] - 1,
+        parts[0]
+      );
+
+      if (selectedMonth) {
+        let monthName = rowDate.toLocaleString("default", {
+          month: "long"
+        });
+
+        if (monthName !== selectedMonth) {
+          show = false;
+        }
+      }
+
+      if (fromDate) {
+        let from = new Date(fromDate);
+
+        if (rowDate < from) {
+          show = false;
+        }
+      }
+
+      if (toDate) {
+        let to = new Date(toDate);
+
+        if (rowDate > to) {
+          show = false;
+        }
+      }
+    }
+
+    if (show) {
+
+      let tr = document.createElement("tr");
+
+      row.forEach((col, i) => {
+
+        let td = document.createElement("td");
+
+        if (i === 5) {
+
+          if (col === "P") {
+            td.innerHTML = '<span class="status-present">Present</span>';
+          }
+          else if (col === "A") {
+            td.innerHTML = '<span class="status-absent">Absent</span>';
+          }
+          else if (col === "H") {
+            td.innerHTML = '<span class="status-holiday">Holiday</span>';
+          }
+          else {
+            td.textContent = col;
+          }
+
+        } else {
+          td.textContent = col;
+        }
+
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    }
+
+  });
+}
+// Event listeners
+document.querySelectorAll(".filter-select").forEach(sel => {
+  sel.addEventListener("change", applyFilters);
+});
+
+document.getElementById("monthFilter").addEventListener("change", applyFilters);
+
+document.getElementById("fromDate").addEventListener("change", applyFilters);
+
+document.getElementById("toDate").addEventListener("change", applyFilters);
+
+</script>
+</body>
+</html>   
 
     table { margin:auto; border-collapse:collapse; width:95%; }
     th, td { border:1px solid #ccc; padding:8px; text-align:center; }
