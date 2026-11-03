@@ -72,6 +72,15 @@ th{
     color:white;
 }
 
+/* Table ke andar wale column filters ki styling */
+.col-filter {
+    width: 90%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
 .status-present{
     background:#2ecc71;
     color:#fff;
@@ -104,50 +113,30 @@ th{
 🚇 GC Daily Report
 </h2>
 
+<!-- Top Main Filters (Month, From, To) -->
 <div class="filter-box">
-  <div>
-    <label><b>Month:</b></label>
-    <select id="monthFilter">
-      <option value="">All Months</option>
-      <option value="0">January</option>
-      <option value="1">February</option>
-      <option value="2">March</option>
-      <option value="3">April</option>
-      <option value="4">May</option>
-      <option value="5">June</option>
-      <option value="6">July</option>
-      <option value="7">August</option>
-      <option value="8">September</option>
-      <option value="9">October</option>
-      <option value="10">November</option>
-      <option value="11">December</option>
-    </select>
+  <label><b>Month</b></label>
+  <select id="monthFilter">
+    <option value="">All Months</option>
+    <option value="0">January</option>
+    <option value="1">February</option>
+    <option value="2">March</option>
+    <option value="3">April</option>
+    <option value="4">May</option>
+    <option value="5">June</option>
+    <option value="6">July</option>
+    <option value="7">August</option>
+    <option value="8">September</option>
+    <option value="9">October</option>
+    <option value="10">November</option>
+    <option value="11">December</option>
+  </select>
 
-    <label><b>From:</b></label>
-    <input type="date" id="fromDate">
+  <label><b>From</b></label>
+  <input type="date" id="fromDate">
 
-    <label><b>To:</b></label>
-    <input type="date" id="toDate">
-  </div>
-
-  <div style="margin-top: 10px;">
-    <label><b>Line:</b></label>
-    <select id="lineFilter"><option value="">All Lines</option></select>
-
-    <label><b>Name:</b></label>
-    <select id="nameFilter"><option value="">All Names</option></select>
-
-    <label><b>Location:</b></label>
-    <select id="locationFilter"><option value="">All Locations</option></select>
-
-    <label><b>Status:</b></label>
-    <select id="statusFilter">
-      <option value="">All Status</option>
-      <option value="P">Present (P)</option>
-      <option value="A">Absent (A)</option>
-      <option value="H">Holiday (H)</option>
-    </select>
-  </div>
+  <label><b>To</b></label>
+  <input type="date" id="toDate">
 </div>
 
 <div id="loading">
@@ -155,7 +144,33 @@ Loading data, please wait...
 </div>
 
 <table id="employeeTable">
-  <thead></thead>
+  <thead>
+    <!-- Row 1: Column Names -->
+    <tr>
+        <th>Date</th>
+        <th>Line</th>
+        <th>Name</th>
+        <th>Location</th>
+        <th>Activity</th>
+        <th>Status</th>
+    </tr>
+    <!-- Row 2: Column-wise Filters -->
+    <tr>
+        <th><input type="text" id="tableDateFilter" class="col-filter" placeholder="Filter Date..."></th>
+        <th><select id="tableLineFilter" class="col-filter"><option value="">All</option></select></th>
+        <th><select id="tableNameFilter" class="col-filter"><option value="">All</option></select></th>
+        <th><select id="tableLocFilter" class="col-filter"><option value="">All</option></select></th>
+        <th><input type="text" id="tableActivityFilter" class="col-filter" placeholder="Search Activity..."></th>
+        <th>
+            <select id="tableStatusFilter" class="col-filter">
+                <option value="">All</option>
+                <option value="P">P</option>
+                <option value="A">A</option>
+                <option value="H">H</option>
+            </select>
+        </th>
+    </tr>
+  </thead>
   <tbody></tbody>
 </table>
 
@@ -170,8 +185,7 @@ fetch(csvUrl)
       const parsed = Papa.parse(csvText, { skipEmptyLines: true });
       allRows = parsed.data;
 
-      populateDropdowns();
-      createHeader();
+      populateTableDropdowns();
       renderTable(allRows);
 
       document.getElementById("loading").style.display = "none";
@@ -181,21 +195,8 @@ fetch(csvUrl)
       document.getElementById("loading").innerHTML = "Error loading data";
   });
 
-function createHeader(){
-    let thead = document.querySelector("#employeeTable thead");
-    thead.innerHTML = `
-    <tr>
-        <th>Date</th>
-        <th>Line</th>
-        <th>Name</th>
-        <th>Location</th>
-        <th>Activity</th>
-        <th>Status</th>
-    </tr>`;
-}
-
-// Unique values ko dropdowns me bharein
-function populateDropdowns(){
+// Table ke andar wale dropdowns ko data se bharna
+function populateTableDropdowns(){
     let lines = new Set();
     let names = new Set();
     let locations = new Set();
@@ -206,14 +207,14 @@ function populateDropdowns(){
         if(row[3]) locations.add(row[3].trim());
     });
 
-    let lineSelect = document.getElementById("lineFilter");
-    lines.forEach(l => lineSelect.innerHTML += `<option value="${l}">${l}</option>`);
+    let lineSel = document.getElementById("tableLineFilter");
+    Array.from(lines).sort().forEach(l => lineSel.innerHTML += `<option value="${l}">${l}</option>`);
 
-    let nameSelect = document.getElementById("nameFilter");
-    names.forEach(n => nameSelect.innerHTML += `<option value="${n}">${n}</option>`);
+    let nameSel = document.getElementById("tableNameFilter");
+    Array.from(names).sort().forEach(n => nameSel.innerHTML += `<option value="${n}">${n}</option>`);
 
-    let locSelect = document.getElementById("locationFilter");
-    locations.forEach(loc => locSelect.innerHTML += `<option value="${loc}">${loc}</option>`);
+    let locSel = document.getElementById("tableLocFilter");
+    Array.from(locations).sort().forEach(loc => locSel.innerHTML += `<option value="${loc}">${loc}</option>`);
 }
 
 function renderTable(data){
@@ -228,7 +229,7 @@ function renderTable(data){
             let col = row[index] ? row[index].toString().trim() : "";
 
             if(index === 0){
-                // Date column me sirf date dikhane ke liye (agar sath me time ho to remove kar dega)
+                // Date column me sirf clean date dikhane ke liye
                 td.textContent = col.split(' ')[0];
             }
             else if(index === 5){
@@ -262,16 +263,19 @@ function applyFilters(){
     let fromDateVal = document.getElementById("fromDate").value;
     let toDateVal = document.getElementById("toDate").value;
     
-    let selectedLine = document.getElementById("lineFilter").value.toLowerCase();
-    let selectedName = document.getElementById("nameFilter").value.toLowerCase();
-    let selectedLoc = document.getElementById("locationFilter").value.toLowerCase();
-    let selectedStatus = document.getElementById("statusFilter").value.toUpperCase();
+    // Column Filters
+    let tDate = document.getElementById("tableDateFilter").value.trim().toLowerCase();
+    let tLine = document.getElementById("tableLineFilter").value.trim().toLowerCase();
+    let tName = document.getElementById("tableNameFilter").value.trim().toLowerCase();
+    let tLoc = document.getElementById("tableLocFilter").value.trim().toLowerCase();
+    let tActivity = document.getElementById("tableActivityFilter").value.trim().toLowerCase();
+    let tStatus = document.getElementById("tableStatusFilter").value.toUpperCase().trim();
 
     let filtered = allRows.filter((row, index) => {
-        if(index === 0) return true; // Header
+        if(index === 0) return true;
         if(!row[0]) return false;
 
-        let dateStr = row[0].split(' ')[0]; // Sirf date part lena
+        let dateStr = row[0].split(' ')[0];
         let dateParts = dateStr.split("/");
         if(dateParts.length < 3) return false;
 
@@ -280,26 +284,28 @@ function applyFilters(){
         let year = parseInt(dateParts[2], 10);
         let rowDate = new Date(year, monthIdx, day);
 
-        // Month Filter
+        // Top Month Filter
         if(month !== "" && rowDate.getMonth() != month) return false;
 
-        // From Date Filter
+        // Top From Date Filter
         if(fromDateVal){
             let [fYear, fMonth, fDay] = fromDateVal.split("-").map(Number);
             if(rowDate < new Date(fYear, fMonth - 1, fDay)) return false;
         }
 
-        // To Date Filter
+        // Top To Date Filter
         if(toDateVal){
             let [tYear, tMonth, tDay] = toDateVal.split("-").map(Number);
             if(rowDate > new Date(tYear, tMonth - 1, tDay)) return false;
         }
 
-        // Column-wise Filters
-        if(selectedLine && (!row[1] || row[1].toLowerCase().trim() !== selectedLine)) return false;
-        if(selectedName && (!row[2] || row[2].toLowerCase().trim() !== selectedName)) return false;
-        if(selectedLoc && (!row[3] || row[3].toLowerCase().trim() !== selectedLoc)) return false;
-        if(selectedStatus && (!row[5] || row[5].toUpperCase().trim() !== selectedStatus)) return false;
+        // Column-wise Table Filters
+        if(tDate && !dateStr.toLowerCase().includes(tDate)) return false;
+        if(tLine && (!row[1] || row[1].trim().toLowerCase() !== tLine)) return false;
+        if(tName && (!row[2] || row[2].trim().toLowerCase() !== tName)) return false;
+        if(tLoc && (!row[3] || row[3].trim().toLowerCase() !== tLoc)) return false;
+        if(tActivity && (!row[4] || !row[4].trim().toLowerCase().includes(tActivity))) return false;
+        if(tStatus && (!row[5] || row[5].trim().toUpperCase() !== tStatus)) return false;
 
         return true;
     });
@@ -307,14 +313,17 @@ function applyFilters(){
     renderTable(filtered);
 }
 
-// Sabhi filters par event listeners lagana
+// Event Listeners for all filters
 document.getElementById("monthFilter").addEventListener("change", applyFilters);
 document.getElementById("fromDate").addEventListener("change", applyFilters);
 document.getElementById("toDate").addEventListener("change", applyFilters);
-document.getElementById("lineFilter").addEventListener("change", applyFilters);
-document.getElementById("nameFilter").addEventListener("change", applyFilters);
-document.getElementById("locationFilter").addEventListener("change", applyFilters);
-document.getElementById("statusFilter").addEventListener("change", applyFilters);
+
+document.getElementById("tableDateFilter").addEventListener("input", applyFilters);
+document.getElementById("tableLineFilter").addEventListener("change", applyFilters);
+document.getElementById("tableNameFilter").addEventListener("change", applyFilters);
+document.getElementById("tableLocFilter").addEventListener("change", applyFilters);
+document.getElementById("tableActivityFilter").addEventListener("input", applyFilters);
+document.getElementById("tableStatusFilter").addEventListener("change", applyFilters);
 </script>
 
 </body>
