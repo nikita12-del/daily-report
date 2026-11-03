@@ -150,7 +150,7 @@ fetch(csvUrl)
 
     allRows = rows;
 
-    createHeader(rows[0]);
+    createHeader();
 
     renderTable(rows);
 
@@ -166,30 +166,22 @@ fetch(csvUrl)
     "Error loading data";
 
 });
-
-function createHeader(headers){
+function createHeader(){
 
     let thead =
     document.querySelector("#employeeTable thead");
 
-    let tr =
-    document.createElement("tr");
-
-    headers.forEach(head => {
-
-        let th =
-        document.createElement("th");
-
-        th.textContent = head;
-
-        tr.appendChild(th);
-
-    });
-
-    thead.appendChild(tr);
+    thead.innerHTML = `
+    <tr>
+        <th>Date</th>
+        <th>Line</th>
+        <th>Name</th>
+        <th>Location</th>
+        <th>Activity</th>
+        <th>Status</th>
+    </tr>`;
 }
-
-function renderTable(data){
+ function renderTable(data){
 
     let tbody =
     document.querySelector("#employeeTable tbody");
@@ -201,10 +193,12 @@ function renderTable(data){
         let tr =
         document.createElement("tr");
 
-        row.forEach((col,index)=>{
+        for(let index = 0; index < 6; index++){
 
             let td =
             document.createElement("td");
+
+            let col = row[index] || "";
 
             if(index === 5){
 
@@ -214,21 +208,21 @@ function renderTable(data){
                 if(status === "P"){
 
                     td.innerHTML =
-                    '<span class="status-present">Present</span>';
+                    '<span class="status-present">P</span>';
 
                 }
 
                 else if(status === "A"){
 
                     td.innerHTML =
-                    '<span class="status-absent">Absent</span>';
+                    '<span class="status-absent">A</span>';
 
                 }
 
                 else if(status === "H"){
 
                     td.innerHTML =
-                    '<span class="status-holiday">Holiday</span>';
+                    '<span class="status-holiday">H</span>';
 
                 }
 
@@ -243,19 +237,18 @@ function renderTable(data){
             else{
 
                 td.innerHTML = col;
- 
+
+            }
+
+            tr.appendChild(td);
+
+        }
+
+        tbody.appendChild(tr);
+
+    });
+
 }
- 
-tr.appendChild(td);
- 
-});
- 
-tbody.appendChild(tr);
- 
-});
- 
-}
- 
 function applyFilters(){
  
 let month =
