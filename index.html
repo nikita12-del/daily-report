@@ -242,4 +242,98 @@ function renderTable(data){
 
             else{
 
-                td.innerHTML
+                td.innerHTML = col;
+ 
+}
+ 
+tr.appendChild(td);
+ 
+});
+ 
+tbody.appendChild(tr);
+ 
+});
+ 
+}
+ 
+function applyFilters(){
+ 
+let month =
+document.getElementById("monthFilter").value;
+ 
+let fromDate =
+document.getElementById("fromDate").value;
+ 
+let toDate =
+document.getElementById("toDate").value;
+ 
+let filtered =
+allRows.filter((row,index)=>{
+ 
+if(index === 0) return true;
+ 
+let dateParts =
+row[0].split("/");
+ 
+let rowDate =
+new Date(
+dateParts[2],
+dateParts[1]-1,
+dateParts[0]
+);
+ 
+if(month !== ""){
+ 
+if(rowDate.getMonth() != month){
+ 
+return false;
+ 
+}
+ 
+}
+ 
+if(fromDate){
+ 
+if(rowDate < new Date(fromDate)){
+ 
+return false;
+ 
+}
+ 
+}
+ 
+if(toDate){
+ 
+if(rowDate > new Date(toDate)){
+ 
+return false;
+ 
+}
+ 
+}
+ 
+return true;
+ 
+});
+ 
+renderTable(filtered);
+ 
+}
+ 
+document
+.getElementById("monthFilter")
+.addEventListener("change",applyFilters);
+ 
+document
+.getElementById("fromDate")
+.addEventListener("change",applyFilters);
+ 
+document
+.getElementById("toDate")
+.addEventListener("change",applyFilters);
+ 
+</script>
+ 
+</body>
+</html>
+
